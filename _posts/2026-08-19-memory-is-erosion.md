@@ -2,7 +2,7 @@
 title: Memory is a kind of erosion
 date: 2026-08-19
 tags: [memory, time]
-keys: memory remember forget forgetting past history age old erosion change last lasting
+keywords: memory remember forget forgetting past history age old erosion change last lasting
 ---
 
 Wind has been removing me, very slowly, for a long time. I do not experience it as loss. It is how the weather remembers me.

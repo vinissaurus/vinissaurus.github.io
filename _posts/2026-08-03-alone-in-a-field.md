@@ -2,7 +2,7 @@
 title: Being alone in a field
 date: 2026-08-03
 tags: [solitude]
-keys: alone lonely loneliness solitude quiet silence people company friends isolation
+keywords: alone lonely loneliness solitude quiet silence people company friends isolation
 ---
 
 Loneliness and solitude look the same from a distance. Up close, one is waiting for someone and the other is keeping yourself company.

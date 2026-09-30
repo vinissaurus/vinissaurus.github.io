@@ -2,7 +2,7 @@
 title: What the glasses are for
 date: 2026-09-02
 tags: [seeing, perception]
-keys: glasses sunglasses see seeing look eyes perception view perspective reflection cool
+keywords: glasses sunglasses see seeing look eyes perception view perspective reflection cool
 ---
 
 Someone put these on me. I have decided to keep them. They do not help me see; they help you see that I am looking.

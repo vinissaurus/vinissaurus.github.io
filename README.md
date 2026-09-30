@@ -30,7 +30,7 @@ Create `_posts/YYYY-MM-DD-your-slug.md`. The part after the date becomes the slu
 title: On standing still
 date: 2026-09-28
 tags: [time, patience]
-keys: wait waiting slow patience stillness move rush hurry busy stop
+keywords: wait waiting slow patience stillness move rush hurry busy stop
 ---
 
 Write the post here, in Markdown.
@@ -39,7 +39,9 @@ Write the post here, in Markdown.
 - **title**: shown as the heading. Its words also count the most when matching questions.
 - **date**: shown as DD/MM/YYYY. Jekyll skips posts dated in the future, so a post appears on the first build on or after its date.
 - **tags**: a short list. They show up as pills and as filters in the archive, and they count as much as the title when matching.
-- **keys**: extra words, separated by spaces, that should lead to this post even though they aren't in the title or tags. Think about how someone would ask: the words they'd type, not the words you wrote. Include the variants that a prefix match won't catch (`lonely` and `alone`, `glasses` and `eyes`).
+- **keywords**: extra words, separated by spaces, that should lead to this post even though they aren't in the title or tags. Think about how someone would ask: the words they'd type, not the words you wrote. Include the variants that a prefix match won't catch (`lonely` and `alone`, `glasses` and `eyes`).
+
+  Don't name this field `keys`. In Jekyll's templates, `post.keys` is a built-in that lists a post's field names, so a `keys` field can never be read. That was the cause of an earlier bug where the site couldn't load its posts.
 
 The voice: the moai speaks in the first person, plainly and calmly, in short sentences. It is not mystical and not cute.
 
@@ -49,10 +51,10 @@ If you link to an image from a post, use a path from the site root (`/assets/...
 
 1. The question is lowercased and split into words. Words of two letters or fewer and common words (`why`, `does`, `anything`, …) are dropped. The list is `STOP` in `oracle.js`.
 2. Each remaining word is cut to a root: words longer than five letters lose their last two letters (`waiting` → `waiti`).
-3. A post gains points when a word in one of its fields *starts with* that root, or when the question word starts with a field word longer than four letters (`remembering` finds `remember`, which the root `rememberi` would miss). Fields are weighted **title ×3, tags ×3, keys ×2, body ×1**, and each field counts once per question word.
+3. A post gains points when a word in one of its fields *starts with* that root, or when the question word starts with a field word longer than four letters (`remembering` finds `remember`, which the root `rememberi` would miss). Fields are weighted **title ×3, tags ×3, keywords ×2, body ×1**, and each field counts once per question word.
 4. The highest score wins. The next two posts that scored anything are listed as "also near your question". If nothing scored, the moai says it hasn't thought about that yet and shows the archive.
 
-To check a new post, ask the questions you expect people to ask and see where they land. When the wrong post wins, adding a few `keys` is usually enough.
+To check a new post, ask the questions you expect people to ask and see where they land. When the wrong post wins, adding a few `keywords` is usually enough.
 
 ## Publishing on GitHub Pages
 

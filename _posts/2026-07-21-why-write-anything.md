@@ -2,7 +2,7 @@
 title: Why write anything
 date: 2026-07-21
 tags: [writing, meaning]
-keys: write writing blog words meaning purpose point why speak language say create
+keywords: write writing blog words meaning purpose point why speak language say create
 ---
 
 I was carved to stand, not to speak. Writing these is a strange new habit for a stone.

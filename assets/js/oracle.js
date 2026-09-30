@@ -268,7 +268,8 @@
     'their them they have has had not no so if as by from into just any anything something thing things really'
   ).split(' '));
 
-  const words = s => (s || '').toLowerCase().match(/[a-z']+/g) || [];
+  const text = v => (Array.isArray(v) ? v.join(' ') : typeof v === 'string' ? v : '');
+  const words = s => text(s).toLowerCase().match(/[a-z']+/g) || [];
 
   // search.json text is stripped HTML, so it may still hold entities like &amp;.
   const decoder = document.createElement('textarea');

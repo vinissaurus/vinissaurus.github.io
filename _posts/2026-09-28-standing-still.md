@@ -2,7 +2,7 @@
 title: On standing still
 date: 2026-09-28
 tags: [time, patience]
-keys: wait waiting slow patience stillness move moving rush hurry busy stop
+keywords: wait waiting slow patience stillness move moving rush hurry busy stop
 ---
 
 People assume that because I have not moved, I have not done anything. But standing still is its own kind of work. The grass changes around me every year. The sky turns every night. Staying put is how I notice.

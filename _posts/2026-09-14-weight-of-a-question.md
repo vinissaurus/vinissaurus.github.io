@@ -2,7 +2,7 @@
 title: The weight of a question
 date: 2026-09-14
 tags: [questions, knowledge]
-keys: ask asking answer answers truth know knowing certainty doubt why curiosity oracle
+keywords: ask asking answer answers truth know knowing certainty doubt why curiosity oracle
 ---
 
 You came here with a question. That is already the more important half. An answer ends a thought; a question keeps it open.

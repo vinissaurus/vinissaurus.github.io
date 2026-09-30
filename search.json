@@ -8,7 +8,7 @@ layout: null
     "title": {{ post.title | jsonify }},
     "date": {{ post.date | date: "%d/%m/%Y" | jsonify }},
     "tags": {{ post.tags | jsonify }},
-    "keys": {{ post.keys | default: "" | jsonify }},
+    "keys": {{ post.keywords | default: "" | jsonify }},
     "excerpt": {{ post.excerpt | strip_html | normalize_whitespace | jsonify }},
     "url": {{ post.url | relative_url | jsonify }},
     "content": {{ post.content | strip_html | normalize_whitespace | jsonify }}
