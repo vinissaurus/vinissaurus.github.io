@@ -5,17 +5,15 @@ layout: default
   Visitors without JavaScript see this archive in the speech balloon.
   With JavaScript the oracle replaces it with its own views.
 {%- endcomment %}
-<div class="archive">
+<section class="archive">
   <h1 class="archive-title">Everything it has said</h1>
-  <ul class="rows">
+  <div class="rows">
     {%- for p in site.posts %}
-    <li>
-      <a class="row" href="{{ p.url | relative_url }}" data-slug="{{ p.slug }}">
-        <span class="row-meta">{{ p.date | date: "%d/%m/%Y" }}{% if p.tags.size > 0 %} · {{ p.tags | join: ", " }}{% endif %}</span>
-        <span class="row-title">{{ p.title }}</span>
-        <span class="row-excerpt">{{ p.content | strip_html | normalize_whitespace | truncatewords: 26, "…" }}</span>
-      </a>
-    </li>
+    <a class="row" href="{{ p.url | relative_url }}" data-slug="{{ p.slug }}">
+      <span class="row-meta">{{ p.date | date: "%d/%m/%Y" }} · {{ p.tags | join: ", " }}</span>
+      <span class="row-title">{{ p.title }}</span>
+      <span class="row-excerpt">{{ p.excerpt | strip_html | normalize_whitespace | truncatewords: 26, "…" }}</span>
+    </a>
     {%- endfor %}
-  </ul>
-</div>
+  </div>
+</section>

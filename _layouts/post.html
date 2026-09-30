@@ -3,23 +3,20 @@ layout: default
 ---
 <article class="post" data-slug="{{ page.slug }}">
   <h1 class="post-title">{{ page.title }}</h1>
-  <p class="post-meta">
+  <div class="post-meta">
     <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%d/%m/%Y" }}</time>
     {%- for tag in page.tags %}
-    <a class="tag" href="{{ '/' | relative_url }}#/all/{{ tag | uri_escape }}" data-tag="{{ tag | escape }}">{{ tag }}</a>
+    <a class="tag hit" href="{{ '/' | relative_url }}#/all/{{ tag | uri_escape }}" data-tag="{{ tag | escape }}">{{ tag }}</a>
     {%- endfor %}
-  </p>
+  </div>
   <div class="post-body">
     {{ content }}
   </div>
-</article>
-
-{%- assign others = site.posts | where_exp: "p", "p.url != page.url" %}
-<aside class="near">
-  <h2 class="near-heading">other things it has said</h2>
-  <ul class="near-list">
+  {%- assign others = site.posts | where_exp: "p", "p.url != page.url" %}
+  <nav class="related" aria-label="Other posts">
+    <div class="related-label">other things it has said</div>
     {%- for p in others limit: 3 %}
-    <li><a class="near-row" href="{{ p.url | relative_url }}" data-slug="{{ p.slug }}"><span class="near-title">{{ p.title }}</span><time datetime="{{ p.date | date_to_xmlschema }}">{{ p.date | date: "%d/%m/%Y" }}</time></a></li>
+    <a class="related-row" href="{{ p.url | relative_url }}" data-slug="{{ p.slug }}"><span>{{ p.title }}</span><time datetime="{{ p.date | date_to_xmlschema }}">{{ p.date | date: "%d/%m/%Y" }}</time></a>
     {%- endfor %}
-  </ul>
-</aside>
+  </nav>
+</article>

@@ -37,7 +37,7 @@
   <script>document.documentElement.className = 'js';</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,wght@0,400;0,500;1,400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="{{ '/assets/css/site.css' | relative_url }}">
   <link rel="preload" as="image" href="{{ site.moai.src | relative_url }}">
   <script src="{{ '/assets/js/oracle.js' | relative_url }}" defer></script>
@@ -55,38 +55,41 @@
   </div>
 
   <header class="brand">
-    <a class="brand-name" href="{{ '/' | relative_url }}">monolith</a>
-    <p class="brand-tag">{{ site.tagline }}</p>
+    <div class="brand-name">monolith</div>
+    <div class="brand-tag">{{ site.tagline }}</div>
   </header>
 
-  <div class="thought js-only">
-    <div class="thought-box" data-mode="pill" tabindex="-1">
+  <div class="read-all js-only">
+    <button type="button">or read everything it has said</button>
+  </div>
+
+  <div class="thought js-only" data-mode="pill">
+    <div class="thought-inner">
+      <span class="thought-dot d1" aria-hidden="true"></span>
+      <span class="thought-dot d2" aria-hidden="true"></span>
       <button class="thought-pill part" data-part="pill" type="button">ask me something</button>
       <form class="thought-form part" data-part="form" action="{{ '/' | relative_url }}" autocomplete="off">
         <label class="thought-label" for="question">What are you wondering about?</label>
         <input class="thought-input" id="question" name="q" type="text" placeholder="why does anything last?" maxlength="200" enterkeyhint="send">
         <div class="thought-actions">
           <button class="btn-ghost" type="button" data-action="cancel">never mind</button>
-          <button class="btn-dark" type="submit">ask</button>
+          <button class="btn-ask" type="submit">ask</button>
         </div>
       </form>
-      <p class="thought-thinking part" data-part="thinking" aria-hidden="true">thinking<span class="thinking-dots">.</span></p>
+      <div class="thought-thinking part" data-part="thinking" tabindex="-1" aria-hidden="true"><span>thinking</span><span class="thinking-dots">·</span></div>
     </div>
-    <span class="thought-dot d1" aria-hidden="true"></span>
-    <span class="thought-dot d2" aria-hidden="true"></span>
   </div>
   <p class="sr-only" id="status" aria-live="polite"></p>
 
-  <a class="read-all js-only" href="{{ '/' | relative_url }}#/all">or read everything it has said</a>
-
   <section class="speech" aria-label="What the monolith said">
-    <svg class="speech-tail" aria-hidden="true" focusable="false"><path /></svg>
+    <div class="speech-tail" aria-hidden="true"></div>
     <div class="speech-scroll">
       <header class="speech-head">
-        <a class="sh-name" href="{{ '/' | relative_url }}">monolith</a>
-        <span class="sh-sep" aria-hidden="true">·</span>
-        <a class="sh-link" href="{{ '/' | relative_url }}#/all" data-view="all">everything</a>
-        <button class="btn-pill again js-only" type="button">ask again</button>
+        <span class="sh-name">monolith</span>
+        <div class="sh-actions">
+          <a class="sh-link hit" href="{{ '/' | relative_url }}#/all" data-view="all">everything</a>
+          <button class="btn-again hit again js-only" type="button">ask again</button>
+        </div>
       </header>
       <div class="speech-body" id="speech-body" tabindex="-1">
         {{ content }}
