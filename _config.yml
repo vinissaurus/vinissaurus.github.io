@@ -1,7 +1,5 @@
 title: monolith
-tagline: essays, asked for
 description: A moai stands in a night field. Ask it something and it answers with the closest thing it has written.
-lang: en
 
 url: "https://vinissaurus.github.io"
 baseurl: ""
@@ -12,11 +10,11 @@ markdown: kramdown
 
 # The one background image. If you replace it, update width/height to match
 # the new file (the oracle reads the aspect ratio from them before it loads).
+# Its alt text lives with the other interface text, in _data/i18n.yml.
 moai:
   src: /assets/moai.jpg
   width: 1408
   height: 768
-  alt: A moai statue wearing sunglasses stands in a dark green field under the Milky Way, with a tabby cat asleep at its base.
 
 defaults:
   - scope:

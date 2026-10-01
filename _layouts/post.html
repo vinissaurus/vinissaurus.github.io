@@ -1,22 +1,26 @@
 ---
 layout: default
 ---
+{%- assign default_lang = site.data.i18n.languages.first.code -%}
+{%- assign T = site.data.i18n.strings[default_lang] -%}
+{%- comment -%} Posts are written in the default language until they carry translations. {%- endcomment -%}
+{%- assign post_lang = page.lang | default: default_lang %}
 <article class="post" data-slug="{{ page.slug }}">
-  <h1 class="post-title">{{ page.title }}</h1>
+  <h1 class="post-title" lang="{{ post_lang }}">{{ page.title }}</h1>
   <div class="post-meta">
     <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%d/%m/%Y" }}</time>
     {%- for tag in page.tags %}
-    <a class="tag hit" href="{{ '/' | relative_url }}#/all/{{ tag | uri_escape }}" data-tag="{{ tag | escape }}">{{ tag }}</a>
+    <a class="tag hit" href="{{ '/' | relative_url }}#/all/{{ tag | uri_escape }}" data-tag="{{ tag | escape }}" lang="{{ post_lang }}">{{ tag }}</a>
     {%- endfor %}
   </div>
-  <div class="post-body">
+  <div class="post-body" lang="{{ post_lang }}">
     {{ content }}
   </div>
   {%- assign others = site.posts | where_exp: "p", "p.url != page.url" %}
-  <nav class="related" aria-label="Other posts">
-    <div class="related-label">other things it has said</div>
+  <nav class="related" aria-label="{{ T.other_posts }}" data-i18n-attr="aria-label:other_posts">
+    <div class="related-label" data-i18n="other_things">{{ T.other_things }}</div>
     {%- for p in others limit: 3 %}
-    <a class="related-row" href="{{ p.url | relative_url }}" data-slug="{{ p.slug }}"><span>{{ p.title }}</span><time datetime="{{ p.date | date_to_xmlschema }}">{{ p.date | date: "%d/%m/%Y" }}</time></a>
+    <a class="related-row" href="{{ p.url | relative_url }}" data-slug="{{ p.slug }}"><span lang="{{ p.lang | default: default_lang }}">{{ p.title }}</span><time datetime="{{ p.date | date_to_xmlschema }}">{{ p.date | date: "%d/%m/%Y" }}</time></a>
     {%- endfor %}
   </nav>
 </article>

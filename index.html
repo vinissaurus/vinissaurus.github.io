@@ -5,11 +5,13 @@ layout: default
   Visitors without JavaScript see this archive in the speech balloon.
   With JavaScript the oracle replaces it with its own views.
 {%- endcomment %}
+{%- assign default_lang = site.data.i18n.languages.first.code -%}
+{%- assign T = site.data.i18n.strings[default_lang] %}
 <section class="archive">
-  <h1 class="archive-title">Everything it has said</h1>
+  <h1 class="archive-title" data-i18n="archive_title">{{ T.archive_title }}</h1>
   <div class="rows">
     {%- for p in site.posts %}
-    <a class="row" href="{{ p.url | relative_url }}" data-slug="{{ p.slug }}">
+    <a class="row" href="{{ p.url | relative_url }}" data-slug="{{ p.slug }}" lang="{{ p.lang | default: default_lang }}">
       <span class="row-meta">{{ p.date | date: "%d/%m/%Y" }} · {{ p.tags | join: ", " }}</span>
       <span class="row-title">{{ p.title }}</span>
       <span class="row-excerpt">{{ p.excerpt | strip_html | normalize_whitespace | truncatewords: 26, "…" }}</span>

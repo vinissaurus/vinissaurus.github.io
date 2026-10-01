@@ -7,6 +7,7 @@ A blog that is one scene: a moai in a night field. Visitors ask it a question an
 | File | What it does |
 | --- | --- |
 | `_posts/*.md` | The posts, in Markdown. |
+| `_data/i18n.yml` | All interface text, in English and Brazilian Portuguese. |
 | `_layouts/default.html` | The scene: image, thought balloon, speech balloon, Open Graph tags. |
 | `_layouts/post.html` | A post inside the speech balloon. Each post also gets a real page at `/posts/{slug}/` for sharing, search engines and visitors without JavaScript. |
 | `index.html` | The home page. Without JavaScript it shows the full archive. |
@@ -55,6 +56,22 @@ If you link to an image from a post, use a path from the site root (`/assets/...
 4. The highest score wins. The next two posts that scored anything are listed as "also near your question". If nothing scored, the moai says it hasn't thought about that yet and shows the archive.
 
 To check a new post, ask the questions you expect people to ask and see where they land. When the wrong post wins, adding a few `keywords` is usually enough.
+
+## Languages
+
+The interface is in English and Brazilian Portuguese. The toggle is in the top-right corner.
+
+- **First visit:** the site follows the browser's language. Visitors whose browser prefers Portuguese get Portuguese; everyone else gets English.
+- **After that:** the visitor's choice is remembered in their browser.
+- **Without JavaScript:** visitors see English. The toggle is hidden for them.
+
+All interface text lives in `_data/i18n.yml`, under one block per language. To change a phrase, edit it there. Every language needs the same keys; if one is missing, the English text is shown instead.
+
+In the templates and in `oracle.js`, translatable text is marked with `data-i18n="key"`, or `data-i18n-attr="attribute:key"` for attributes such as `placeholder` or `aria-label`. To add a new piece of interface text, add the key to every language block and mark the element the same way.
+
+To add a language, add it to `languages` (the order sets the toggle's order, and the first one is the default) and add a block under `strings` with its code.
+
+**Posts aren't translated yet.** Their titles, text and tags stay in English and are marked `lang="en"`, so screen readers still pronounce them correctly when the interface is in Portuguese. Questions are also matched only against the English text, so a question typed in Portuguese will usually get the "I haven't thought about that yet" answer until the posts carry translations.
 
 ## Publishing on GitHub Pages
 

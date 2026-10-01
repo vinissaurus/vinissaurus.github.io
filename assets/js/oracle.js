@@ -33,12 +33,11 @@
   const HOME = body.dataset.home || '/';
   const SEARCH_URL = body.dataset.search || HOME + 'search.json';
   const SITE = body.dataset.site || 'monolith';
-  const HOME_TITLE = document.title;
-
   const ZOOM_MS = 1600;
   const THINK_MS = 1300;
   const FADE_MS = 650;                 // reduced motion: crossfade length
   const MX = 0.652, MY = 0.62;         // the moai's head, as fractions of the image
+  const TOP_CLEAR = 68;                // narrow screens: room for the language toggle
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -46,6 +45,66 @@
   let zoomedOut = false;
   let run = 0;           // bumps on every transition; stale async steps bail out
   let dotTimer = 0;
+
+  /* ---------------- language ----------------
+   * Interface text comes from _data/i18n.yml, embedded in the page as JSON.
+   * Elements carry data-i18n="key" (text) or data-i18n-attr="attr:key;…",
+   * so switching language rewrites them in place, including rendered views.
+   */
+
+  const I18N = JSON.parse($('#i18n').textContent);
+  const LANGS = I18N.languages.map(l => l.code);
+  const DEFAULT_LANG = LANGS[0];
+  const LANG_KEY = 'monolith.lang';
+
+  function pickLang() {
+    let saved = null;
+    try { saved = localStorage.getItem(LANG_KEY); } catch (_) { /* storage blocked */ }
+    if (LANGS.includes(saved)) return saved;
+    // First visit: follow the browser if it prefers one of our languages.
+    for (const want of navigator.languages || [navigator.language || '']) {
+      const base = want.toLowerCase().split('-')[0];
+      const hit = LANGS.find(code => code.toLowerCase() === want.toLowerCase())
+               || LANGS.find(code => code.toLowerCase().split('-')[0] === base);
+      if (hit) return hit;
+    }
+    return DEFAULT_LANG;
+  }
+
+  let lang = pickLang();
+  let title = { key: 'home_title' };   // what document.title is built from
+
+  const t = key => {
+    const table = I18N.strings[lang] || {};
+    return key in table ? table[key] : (I18N.strings[DEFAULT_LANG][key] ?? key);
+  };
+
+  function setTitle(spec) {
+    title = spec;
+    document.title = typeof spec === 'string' ? spec : t(spec.key) + (spec.suffix || '');
+  }
+
+  function applyLang() {
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-attr]').forEach(el => {
+      el.dataset.i18nAttr.split(';').forEach(pair => {
+        const [attr, key] = pair.split(':');
+        el.setAttribute(attr.trim(), t(key.trim()));
+      });
+    });
+    document.querySelectorAll('.lang-btn').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === lang));
+    if (body.dataset.state === 'listening') status.textContent = t('thinking');
+    setTitle(title);
+  }
+
+  function setLang(code) {
+    if (!LANGS.includes(code) || code === lang) return;
+    lang = code;
+    try { localStorage.setItem(LANG_KEY, code); } catch (_) { /* storage blocked */ }
+    applyLang();
+    if (G) placeThought();
+  }
 
   /* ---------------- geometry ---------------- */
 
@@ -110,8 +169,10 @@
     const curW = asking ? askW : 190;
     const head = at(G.in, 0.62, 0.45);
     const ax = Math.max(head.x, curW + 20);
-    const ay = Math.max(head.y, asking ? 200 : 90);
+    let ay = Math.max(head.y, asking ? 200 : 90);
     form.style.width = askW + 'px';
+    // On narrow screens the form spans the width; keep it below the language toggle.
+    if (!G.wide) ay = Math.max(ay, TOP_CLEAR + thought.offsetHeight);
     thought.style.right = G.vw - ax + 'px';
     thought.style.bottom = G.vh - ay + 'px';
   }
@@ -128,8 +189,8 @@
       bw = Math.min(780, right - 24); bx = right - bw; by = 28; bh = vh - 56;
       tx = bw; ty = clamp(headY - by, 60, bh - 60);
     } else {
-      bx = 12; bw = vw - 24; by = 12;
-      bh = Math.min(Math.max(320, capY - 34 - by), vh - 24);
+      bx = 12; bw = vw - 24; by = TOP_CLEAR;
+      bh = Math.min(Math.max(320, capY - 34 - by), vh - by - 12);
       tx = clamp(headX - bx, 40, bw - 40); ty = bh;
     }
 
@@ -172,7 +233,7 @@
     let n = 1;
     thinkingDots.textContent = '·';
     dotTimer = setInterval(() => { n = (n % 3) + 1; thinkingDots.textContent = '·'.repeat(n); }, 280);
-    status.textContent = 'thinking';
+    status.textContent = t('thinking');
   }
 
   function stopThinking() {
@@ -196,7 +257,7 @@
       const [posts] = await Promise.all([loadPosts(), wait(THINK_MS)]);
       answer = await answerFor(q, posts);
     } catch (err) {
-      answer = { html: failureHtml(), route: null, title: HOME_TITLE };
+      answer = { html: failureHtml(), route: null, title: { key: 'home_title' } };
     }
     stopThinking();
     if (my !== run) return;
@@ -211,13 +272,13 @@
 
   function focusSpeech() { speechBody.focus({ preventScroll: true }); }
 
-  async function speak({ html, route, title }, { animate = false, keepScroll = false, focus = true } = {}) {
+  async function speak({ html, route, title: pageTitle }, { animate = false, keepScroll = false, focus = true } = {}) {
     const my = ++run;
     const top = scroller.scrollTop;
     speechBody.innerHTML = html;
     scroller.scrollTop = keepScroll ? top : 0;
     setRoute(route);
-    document.title = title;
+    setTitle(pageTitle);
 
     if (body.dataset.state === 'speaking') {        // already open: swap in place
       if (focus) focusSpeech();
@@ -247,7 +308,7 @@
     if (body.dataset.state !== 'speaking') return;
     const my = ++run;
     setRoute(null);
-    document.title = HOME_TITLE;
+    setTitle({ key: 'home_title' });
     input.value = '';
     syncAskBtn();
     setState('unzooming');
@@ -339,15 +400,23 @@
     return postAnswer(ranked[0].p, posts, { asked: q, near });
   }
 
-  /* ---------------- views ---------------- */
+  /* ---------------- views ----------------
+   * Interface text is marked with data-i18n so a language switch can rewrite it.
+   * Post text is marked with its own lang, since posts are not translated yet.
+   */
 
-  const asked = q => `<div class="asked">you asked — <span>“${esc(q)}”</span></div>`;
+  const ui = (key, tagName = 'span', attrs = '') =>
+    `<${tagName}${attrs} data-i18n="${key}">${esc(t(key))}</${tagName}>`;
 
-  const tagLink = t =>
-    `<a class="tag hit" href="${esc(HOME)}#/all/${encodeURIComponent(t)}" data-tag="${esc(t)}">${esc(t)}</a>`;
+  const postLang = p => p.lang || DEFAULT_LANG;
+
+  const asked = q => `<div class="asked">${ui('you_asked')} <span class="q">“${esc(q)}”</span></div>`;
+
+  const tagLink = (tag, p) =>
+    `<a class="tag hit" href="${esc(HOME)}#/all/${encodeURIComponent(tag)}" data-tag="${esc(tag)}" lang="${postLang(p)}">${esc(tag)}</a>`;
 
   const relatedRow = p =>
-    `<a class="related-row" href="${esc(p.url)}" data-slug="${esc(p.id)}"><span>${esc(p.title)}</span><time>${esc(p.date)}</time></a>`;
+    `<a class="related-row" href="${esc(p.url)}" data-slug="${esc(p.id)}"><span lang="${postLang(p)}">${esc(p.title)}</span><time>${esc(p.date)}</time></a>`;
 
   const excerpt = s => (s.length > 150 ? s.slice(0, 150).replace(/\s+\S*$/, '') + '…' : s);
 
@@ -358,11 +427,11 @@
     const html = `
       <article class="post" data-slug="${esc(p.id)}">
         ${q ? asked(q) : ''}
-        <h1 class="post-title">${esc(p.title)}</h1>
-        <div class="post-meta"><time>${esc(p.date)}</time>${p.tags.map(tagLink).join('')}</div>
-        <div class="post-body">${bodyHtml}</div>
-        <nav class="related" aria-label="Other posts">
-          <div class="related-label">${isNear ? 'also near your question' : 'other things it has said'}</div>
+        <h1 class="post-title" lang="${postLang(p)}">${esc(p.title)}</h1>
+        <div class="post-meta"><time>${esc(p.date)}</time>${p.tags.map(tag => tagLink(tag, p)).join('')}</div>
+        <div class="post-body" lang="${postLang(p)}">${bodyHtml}</div>
+        <nav class="related" aria-label="${esc(t('other_posts'))}" data-i18n-attr="aria-label:other_posts">
+          ${ui(isNear ? 'also_near' : 'other_things', 'div', ' class="related-label"')}
           ${list.map(relatedRow).join('')}
         </nav>
       </article>`;
@@ -373,26 +442,30 @@
     const tags = [...new Set(posts.flatMap(p => p.tags))];
     if (tag && !tags.includes(tag)) tag = null;
     const shown = tag ? posts.filter(p => p.tags.includes(tag)) : posts;
-    const chip = (value, label) =>
-      `<button class="chip hit" type="button" data-filter="${esc(value)}" aria-pressed="${(tag || '') === value}">${esc(label)}</button>`;
+    const pressed = value => `aria-pressed="${(tag || '') === value}"`;
+    const chips = [
+      `<button class="chip hit" type="button" data-filter="" ${pressed('')} data-i18n="all">${esc(t('all'))}</button>`,
+      ...tags.map(x => `<button class="chip hit" type="button" data-filter="${esc(x)}" ${pressed(x)} lang="${DEFAULT_LANG}">${esc(x)}</button>`),
+    ];
     const row = p => `
-      <a class="row" href="${esc(p.url)}" data-slug="${esc(p.id)}">
+      <a class="row" href="${esc(p.url)}" data-slug="${esc(p.id)}" lang="${postLang(p)}">
         <span class="row-meta">${esc(p.date)} · ${esc(p.tags.join(', '))}</span>
         <span class="row-title">${esc(p.title)}</span>
         <span class="row-excerpt">${esc(excerpt(p.excerpt))}</span>
       </a>`;
     const html = `
       <section class="archive">
-        ${unanswered ? `<div class="notice">${asked(unanswered)}<p class="note">I haven't thought about that yet. Here is what I have thought about.</p></div>` : ''}
-        <h1 class="archive-title">Everything it has said</h1>
-        <div class="chips" role="group" aria-label="Filter by tag">${chip('', 'all')}${tags.map(t => chip(t, t)).join('')}</div>
+        ${unanswered ? `<div class="notice">${asked(unanswered)}${ui('no_match', 'p', ' class="note"')}</div>` : ''}
+        ${ui('archive_title', 'h1', ' class="archive-title"')}
+        <div class="chips" role="group" aria-label="${esc(t('filter_label'))}" data-i18n-attr="aria-label:filter_label">${chips.join('')}</div>
         <div class="rows">${shown.map(row).join('')}</div>
       </section>`;
-    return { html, route: tag ? '#/all/' + encodeURIComponent(tag) : '#/all', title: `Everything — ${SITE}` };
+    const route = tag ? '#/all/' + encodeURIComponent(tag) : '#/all';
+    return { html, route, title: { key: 'archive_page_title', suffix: ` — ${SITE}` } };
   }
 
   function failureHtml() {
-    return `<section class="archive"><p class="note">I can't reach my own words right now. Ask again in a moment.</p></section>`;
+    return `<section class="archive">${ui('failure', 'p', ' class="note"')}</section>`;
   }
 
   /* ---------------- navigation ---------------- */
@@ -421,6 +494,8 @@
   const go = (route, opts) => (route.type === 'all' ? openArchive(route.tag, opts) : openPost(route.id, opts));
 
   /* ---------------- events ---------------- */
+
+  document.querySelectorAll('.lang-btn').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
 
   pill.addEventListener('click', ask);
   form.addEventListener('submit', submit);
@@ -478,6 +553,8 @@
     const route = parseHash();
     const onPost = body.dataset.page === 'post';
     zoomedOut = onPost || !!route;
+    if (onPost) title = document.title;   // a post's title is its own, in any language
+    applyLang();
 
     instantly(() => {
       layout();

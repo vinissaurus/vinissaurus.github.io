@@ -1,0 +1,65 @@
+# Interface text, one block per language.
+# The first language is the default: it is what Jekyll writes into the HTML,
+# and what visitors without JavaScript see. The toggle switches between all
+# languages listed here, in this order.
+
+languages:
+  - code: en
+    label: EN
+    name: English
+  - code: pt-BR
+    label: PT
+    name: Português (Brasil)
+
+strings:
+  en:
+    tagline: essays, asked for
+    home_title: monolith — essays, asked for
+    moai_alt: A moai statue wearing sunglasses stands in a dark green field under the Milky Way, with a tabby cat asleep at its base.
+    language: Language
+    read_all: or read everything it has said
+    ask_pill: ask me something
+    ask_label: What are you wondering about?
+    ask_placeholder: why does anything last?
+    never_mind: never mind
+    ask: ask
+    thinking: thinking
+    speech_label: What the monolith said
+    everything: everything
+    ask_again: ask again
+    you_asked: you asked —
+    also_near: also near your question
+    other_things: other things it has said
+    other_posts: Other posts
+    archive_title: Everything it has said
+    archive_page_title: Everything
+    filter_label: Filter by tag
+    all: all
+    no_match: I haven't thought about that yet. Here is what I have thought about.
+    failure: I can't reach my own words right now. Ask again in a moment.
+
+  pt-BR:
+    tagline: ensaios, a quem pergunta
+    home_title: monolith — ensaios, a quem pergunta
+    moai_alt: Uma estátua moai de óculos escuros num campo verde-escuro sob a Via Láctea, com um gato malhado dormindo aos seus pés.
+    language: Idioma
+    read_all: ou leia tudo o que ele já disse
+    ask_pill: pergunte-me algo
+    ask_label: O que você anda se perguntando?
+    ask_placeholder: por que as coisas duram?
+    never_mind: deixa pra lá
+    ask: perguntar
+    thinking: pensando
+    speech_label: O que o monolith disse
+    everything: tudo
+    ask_again: perguntar de novo
+    you_asked: você perguntou —
+    also_near: também perto da sua pergunta
+    other_things: outras coisas que ele já disse
+    other_posts: Outros textos
+    archive_title: Tudo o que ele já disse
+    archive_page_title: Tudo
+    filter_label: Filtrar por tema
+    all: todos
+    no_match: Ainda não pensei sobre isso. Aqui está o que já pensei.
+    failure: Não consigo alcançar minhas próprias palavras agora. Pergunte de novo daqui a pouco.

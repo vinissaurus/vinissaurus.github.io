@@ -96,6 +96,45 @@ button { cursor: pointer; }
   opacity: 1; visibility: visible; transition: opacity 400ms ease;
 }
 
+/* ---------- language toggle ---------- */
+
+.lang {
+  position: fixed; top: 24px; right: 28px; z-index: 6;
+  display: flex; gap: 2px;
+  padding: 3px;
+  border: 1px solid oklch(0.4 0.014 255);
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--speech) 72%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.lang-btn {
+  min-width: 44px; height: 26px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .04em;
+  color: oklch(0.85 0.012 85);
+}
+.lang-btn:hover { color: oklch(0.9 0.07 145); }
+.lang-btn[aria-pressed="true"] { background: var(--accent); color: var(--speech); }
+
+.js .lang { opacity: 0; transition: opacity 400ms ease; }
+.js body.ready .lang { opacity: 1; }
+
+@media (max-width: 899px) {
+  .lang { top: 16px; right: 16px; }
+
+  /* The form spans the width here and would sit on top of the title. */
+  .js body.ready:is([data-state="asking"], [data-state="listening"]) .brand {
+    opacity: 0; visibility: hidden; transition: opacity 400ms ease, visibility 0s linear 400ms;
+  }
+}
+
 /* ---------- thought balloon ---------- */
 
 .thought {
@@ -278,7 +317,7 @@ button { cursor: pointer; }
 /* post view */
 
 .asked { font-family: var(--mono); font-size: 13px; line-height: 1.5; color: var(--muted); }
-.asked span { color: oklch(0.9 0.012 85); }
+.asked .q { color: oklch(0.9 0.012 85); }
 
 .post-title {
   margin: 0;
@@ -376,3 +415,4 @@ button { cursor: pointer; }
   .thought, .js body.ready .thought { transform: none; }
   .thought-pill:hover { transform: none; }
 }
+.lang .hit::after { left: 0; right: 0; }
