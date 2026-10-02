@@ -79,13 +79,21 @@
     return key in table ? table[key] : (I18N.strings[DEFAULT_LANG][key] ?? key);
   };
 
+  // Tags are written in English in the posts; _data/i18n.yml names them per language.
+  const tagName = (tag, code = lang) => ((I18N.tags || {})[code] || {})[tag] || tag;
+
+  // A title is either fixed text, an interface key, or one text per language.
   function setTitle(spec) {
     title = spec;
-    document.title = typeof spec === 'string' ? spec : t(spec.key) + (spec.suffix || '');
+    if (typeof spec === 'string') document.title = spec;
+    else if (spec.byLang) document.title = (spec.byLang[lang] || spec.byLang[DEFAULT_LANG]) + (spec.suffix || '');
+    else document.title = t(spec.key) + (spec.suffix || '');
   }
 
   function applyLang() {
     document.documentElement.lang = lang;
+    document.querySelectorAll('[data-lang-only]').forEach(el => { el.hidden = el.dataset.langOnly !== lang; });
+    document.querySelectorAll('[data-i18n-tag]').forEach(el => { el.textContent = tagName(el.dataset.i18nTag); });
     document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
     document.querySelectorAll('[data-i18n-attr]').forEach(el => {
       el.dataset.i18nAttr.split(';').forEach(pair => {
@@ -323,14 +331,22 @@
 
   /* ---------------- posts + matching ---------------- */
 
+  // English and Portuguese words too common to say anything about a question.
+  // Written without accents: questions and posts are compared that way.
   const STOP = new Set((
     'the a an and or but is are was were be been am i you me my your we it its of to in on at for with ' +
     'what why how who when where which that this do does did can could would should will about there ' +
-    'their them they have has had not no so if as by from into just any anything something thing things really'
+    'their them they have has had not no so if as by from into just any anything something thing things really ' +
+    'que por porque para pra com sem uma umas uns dos das nos nas num numa pelo pela pelos pelas ' +
+    'qual quais quem quando onde como isso isto esse essa este esta aquilo voce voces ele ela eles elas ' +
+    'meu minha seu sua nao sim mais muito muita ja tem ter tenho estou esta sao ser foi era ' +
+    'algo alguma algum coisa coisas nada tudo tambem aos sempre'
   ).split(' '));
 
   const text = v => (Array.isArray(v) ? v.join(' ') : typeof v === 'string' ? v : '');
-  const words = s => text(s).toLowerCase().match(/[a-z']+/g) || [];
+  const words = s => text(s).toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .match(/[a-z']+/g) || [];
 
   // search.json text is stripped HTML, so it may still hold entities like &amp;.
   const decoder = document.createElement('textarea');
@@ -339,58 +355,87 @@
   let postsPromise = null;
   const bodies = new Map();
 
+  // Each post gets one text per language: its translation, or the original
+  // (with the original's lang) where there is none.
+  function prepare(p) {
+    const tags = p.tags || [];
+    const textFor = code => {
+      const tr = code === DEFAULT_LANG ? p : (p.translations || {})[code];
+      const src = tr || p;
+      return {
+        lang: tr ? code : DEFAULT_LANG,
+        title: decode(src.title),
+        keys: text(src.keys),
+        excerpt: decode(src.excerpt),
+        content: decode(src.content),
+      };
+    };
+    const texts = Object.fromEntries(LANGS.map(code => [code, textFor(code)]));
+    const fields = LANGS.map(code => [
+      [words(texts[code].title), 3],
+      [words(tags.map(tag => tagName(tag, code)).join(' ')), 3],
+      [words(texts[code].keys), 2],
+      [words(texts[code].content), 1],
+    ]);
+    return { id: p.id, url: p.url, date: p.date, tags, texts, fields, title: texts[DEFAULT_LANG].title };
+  }
+
   function loadPosts() {
     if (!postsPromise) {
       postsPromise = fetch(SEARCH_URL)
         .then(r => (r.ok ? r.json() : Promise.reject(new Error(r.status))))
-        .then(list => list.map(p => {
-          const post = {
-            ...p,
-            title: decode(p.title),
-            excerpt: decode(p.excerpt),
-            content: decode(p.content),
-            tags: p.tags || [],
-          };
-          post.fields = [
-            [words(post.title), 3],
-            [words(post.tags.join(' ')), 3],
-            [words(post.keys), 2],
-            [words(post.content), 1],
-          ];
-          return post;
-        }))
+        .then(list => list.map(prepare))
         .catch(err => { postsPromise = null; throw err; });
     }
     return postsPromise;
   }
 
   // Each question word (or its root) is prefix-matched against each field.
+  // A post is scored in each language separately and keeps its best score,
+  // so a question in either language finds it.
   function rank(q, posts) {
-    const tokens = words(q).filter(t => t.length > 2 && !STOP.has(t));
-    return posts.map(p => {
+    const tokens = words(q).filter(w => w.length > 2 && !STOP.has(w));
+    const score = fields => {
       let s = 0;
-      for (const t of tokens) {
-        const root = t.length > 5 ? t.slice(0, -2) : t;
-        for (const [list, weight] of p.fields) {
-          if (list.some(x => x.startsWith(root) || (x.length > 4 && t.startsWith(x)))) s += weight;
+      for (const tok of tokens) {
+        const root = tok.length > 5 ? tok.slice(0, -2) : tok;
+        for (const [list, weight] of fields) {
+          if (list.some(x => x.startsWith(root) || (x.length > 4 && tok.startsWith(x)))) s += weight;
         }
       }
-      return { p, s };
-    }).sort((a, b) => b.s - a.s);
+      return s;
+    };
+    return posts
+      .map(p => ({ p, s: Math.max(...p.fields.map(score)) }))
+      .sort((a, b) => b.s - a.s);
   }
 
+  // The post's own page holds its body in every language; take them all.
   function fetchBody(p) {
     if (!bodies.has(p.id)) {
       bodies.set(p.id, fetch(p.url)
         .then(r => (r.ok ? r.text() : Promise.reject(new Error(r.status))))
-        .then(text => {
-          const el = new DOMParser().parseFromString(text, 'text/html').querySelector('article .post-body');
-          if (!el) throw new Error('no article');
-          return el.innerHTML;
+        .then(html => {
+          const doc = new DOMParser().parseFromString(html, 'text/html');
+          const found = readBodies(doc);
+          if (!found) throw new Error('no article');
+          return found;
         })
-        .catch(() => { bodies.delete(p.id); return `<p>${esc(p.content)}</p>`; }));
+        .catch(() => {
+          bodies.delete(p.id);
+          return Object.fromEntries(LANGS.map(code => [code, `<p>${esc(p.texts[code].content)}</p>`]));
+        }));
     }
     return bodies.get(p.id);
+  }
+
+  function readBodies(root) {
+    const els = [...root.querySelectorAll('article .post-body')];
+    if (!els.length) return null;
+    const byLang = {};
+    for (const el of els) byLang[el.dataset.langOnly || DEFAULT_LANG] = el.innerHTML;
+    for (const code of LANGS) if (!(code in byLang)) byLang[code] = byLang[DEFAULT_LANG] || els[0].innerHTML;
+    return byLang;
   }
 
   async function answerFor(q, posts) {
@@ -401,24 +446,32 @@
   }
 
   /* ---------------- views ----------------
-   * Interface text is marked with data-i18n so a language switch can rewrite it.
-   * Post text is marked with its own lang, since posts are not translated yet.
+   * Interface text is marked with data-i18n, tags with data-i18n-tag, and post
+   * text is written once per language with data-lang-only. A language switch
+   * rewrites or reveals these in place, so views never need re-rendering.
    */
 
-  const ui = (key, tagName = 'span', attrs = '') =>
-    `<${tagName}${attrs} data-i18n="${key}">${esc(t(key))}</${tagName}>`;
+  const ui = (key, tagName_ = 'span', attrs = '') =>
+    `<${tagName_}${attrs} data-i18n="${key}">${esc(t(key))}</${tagName_}>`;
 
-  const postLang = p => p.lang || DEFAULT_LANG;
+  // One element per language; only the current one is visible.
+  const variants = (p, render, el = 'span', attrs = '') => LANGS.map(code =>
+    `<${el}${attrs} data-lang-only="${code}" lang="${p.texts[code].lang}"${code === lang ? '' : ' hidden'}>${render(p.texts[code], code)}</${el}>`
+  ).join('');
+
+  const tagLabel = tag => `<span data-i18n-tag="${esc(tag)}">${esc(tagName(tag))}</span>`;
 
   const asked = q => `<div class="asked">${ui('you_asked')} <span class="q">“${esc(q)}”</span></div>`;
 
-  const tagLink = (tag, p) =>
-    `<a class="tag hit" href="${esc(HOME)}#/all/${encodeURIComponent(tag)}" data-tag="${esc(tag)}" lang="${postLang(p)}">${esc(tag)}</a>`;
+  const tagLink = tag =>
+    `<a class="tag hit" href="${esc(HOME)}#/all/${encodeURIComponent(tag)}" data-tag="${esc(tag)}" data-i18n-tag="${esc(tag)}">${esc(tagName(tag))}</a>`;
 
   const relatedRow = p =>
-    `<a class="related-row" href="${esc(p.url)}" data-slug="${esc(p.id)}"><span lang="${postLang(p)}">${esc(p.title)}</span><time>${esc(p.date)}</time></a>`;
+    `<a class="related-row" href="${esc(p.url)}" data-slug="${esc(p.id)}">${variants(p, x => esc(x.title))}<time>${esc(p.date)}</time></a>`;
 
   const excerpt = s => (s.length > 150 ? s.slice(0, 150).replace(/\s+\S*$/, '') + '…' : s);
+
+  const titleOf = p => ({ byLang: Object.fromEntries(LANGS.map(code => [code, p.texts[code].title])), suffix: ` — ${SITE}` });
 
   async function postAnswer(p, posts, { asked: q = null, near = [] } = {}) {
     const bodyHtml = await fetchBody(p);
@@ -427,15 +480,15 @@
     const html = `
       <article class="post" data-slug="${esc(p.id)}">
         ${q ? asked(q) : ''}
-        <h1 class="post-title" lang="${postLang(p)}">${esc(p.title)}</h1>
-        <div class="post-meta"><time>${esc(p.date)}</time>${p.tags.map(tag => tagLink(tag, p)).join('')}</div>
-        <div class="post-body" lang="${postLang(p)}">${bodyHtml}</div>
+        <h1 class="post-title">${variants(p, x => esc(x.title))}</h1>
+        <div class="post-meta"><time>${esc(p.date)}</time>${p.tags.map(tagLink).join('')}</div>
+        ${variants(p, (x, code) => bodyHtml[code], 'div', ' class="post-body"')}
         <nav class="related" aria-label="${esc(t('other_posts'))}" data-i18n-attr="aria-label:other_posts">
           ${ui(isNear ? 'also_near' : 'other_things', 'div', ' class="related-label"')}
           ${list.map(relatedRow).join('')}
         </nav>
       </article>`;
-    return { html, route: '#/' + p.id, title: `${p.title} — ${SITE}` };
+    return { html, route: '#/' + p.id, title: titleOf(p) };
   }
 
   function archiveAnswer(posts, tag, unanswered = null) {
@@ -445,13 +498,13 @@
     const pressed = value => `aria-pressed="${(tag || '') === value}"`;
     const chips = [
       `<button class="chip hit" type="button" data-filter="" ${pressed('')} data-i18n="all">${esc(t('all'))}</button>`,
-      ...tags.map(x => `<button class="chip hit" type="button" data-filter="${esc(x)}" ${pressed(x)} lang="${DEFAULT_LANG}">${esc(x)}</button>`),
+      ...tags.map(x => `<button class="chip hit" type="button" data-filter="${esc(x)}" ${pressed(x)} data-i18n-tag="${esc(x)}">${esc(tagName(x))}</button>`),
     ];
     const row = p => `
-      <a class="row" href="${esc(p.url)}" data-slug="${esc(p.id)}" lang="${postLang(p)}">
-        <span class="row-meta">${esc(p.date)} · ${esc(p.tags.join(', '))}</span>
-        <span class="row-title">${esc(p.title)}</span>
-        <span class="row-excerpt">${esc(excerpt(p.excerpt))}</span>
+      <a class="row" href="${esc(p.url)}" data-slug="${esc(p.id)}">
+        <span class="row-meta">${esc(p.date)} · ${p.tags.map(tagLabel).join(', ')}</span>
+        ${variants(p, x => esc(x.title), 'span', ' class="row-title"')}
+        ${variants(p, x => esc(excerpt(x.excerpt)), 'span', ' class="row-excerpt"')}
       </a>`;
     const html = `
       <section class="archive">
@@ -553,15 +606,20 @@
     const route = parseHash();
     const onPost = body.dataset.page === 'post';
     zoomedOut = onPost || !!route;
-    if (onPost) title = document.title;   // a post's title is its own, in any language
+    const article = onPost && $('article.post', speechBody);
+    if (article) {
+      // The page already holds this post in every language.
+      const byLang = {};
+      article.querySelectorAll('.post-title [data-lang-only]').forEach(el => { byLang[el.dataset.langOnly] = el.textContent; });
+      title = Object.keys(byLang).length ? { byLang, suffix: ` — ${SITE}` } : document.title;
+      const found = readBodies(document);
+      if (found) bodies.set(article.dataset.slug, Promise.resolve(found));
+    }
     applyLang();
 
     instantly(() => {
       layout();
       if (onPost) {
-        const article = $('article.post', speechBody);
-        const bodyEl = $('.post-body', speechBody);
-        if (article && bodyEl) bodies.set(article.dataset.slug, Promise.resolve(bodyEl.innerHTML));
         setState('speaking');
       } else if (route) {
         setState('wait');

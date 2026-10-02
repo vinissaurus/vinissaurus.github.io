@@ -1,26 +1,58 @@
 ---
 layout: default
 ---
-{%- assign default_lang = site.data.i18n.languages.first.code -%}
+{%- comment -%}
+  Each translatable part is written once per language, marked data-lang-only.
+  Only the default language is visible in the HTML; the oracle shows the one
+  that matches the interface. A post without a translation for a language
+  shows its original text there, marked with the original's lang.
+{%- endcomment -%}
+{%- assign langs = site.data.i18n.languages -%}
+{%- assign default_lang = langs.first.code -%}
 {%- assign T = site.data.i18n.strings[default_lang] -%}
-{%- comment -%} Posts are written in the default language until they carry translations. {%- endcomment -%}
-{%- assign post_lang = page.lang | default: default_lang %}
 <article class="post" data-slug="{{ page.slug }}">
-  <h1 class="post-title" lang="{{ post_lang }}">{{ page.title }}</h1>
+  <h1 class="post-title">
+    {%- for l in langs -%}
+      {%- assign tr = page.translations[l.code] -%}
+      {%- if forloop.first == false and tr -%}
+        <span data-lang-only="{{ l.code }}" lang="{{ l.code }}" hidden>{{ tr.title }}</span>
+      {%- else -%}
+        <span data-lang-only="{{ l.code }}" lang="{{ default_lang }}"{% unless forloop.first %} hidden{% endunless %}>{{ page.title }}</span>
+      {%- endif -%}
+    {%- endfor -%}
+  </h1>
   <div class="post-meta">
     <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%d/%m/%Y" }}</time>
     {%- for tag in page.tags %}
-    <a class="tag hit" href="{{ '/' | relative_url }}#/all/{{ tag | uri_escape }}" data-tag="{{ tag | escape }}" lang="{{ post_lang }}">{{ tag }}</a>
+    <a class="tag hit" href="{{ '/' | relative_url }}#/all/{{ tag | uri_escape }}" data-tag="{{ tag | escape }}" data-i18n-tag="{{ tag | escape }}">{{ tag }}</a>
     {%- endfor %}
   </div>
-  <div class="post-body" lang="{{ post_lang }}">
+  {%- for l in langs %}
+    {%- assign tr = page.translations[l.code] %}
+    {%- if forloop.first == false and tr %}
+  <div class="post-body" data-lang-only="{{ l.code }}" lang="{{ l.code }}" hidden>
+    {{ tr.body | markdownify }}
+  </div>
+    {%- else %}
+  <div class="post-body" data-lang-only="{{ l.code }}" lang="{{ default_lang }}"{% unless forloop.first %} hidden{% endunless %}>
     {{ content }}
   </div>
+    {%- endif %}
+  {%- endfor %}
   {%- assign others = site.posts | where_exp: "p", "p.url != page.url" %}
   <nav class="related" aria-label="{{ T.other_posts }}" data-i18n-attr="aria-label:other_posts">
     <div class="related-label" data-i18n="other_things">{{ T.other_things }}</div>
     {%- for p in others limit: 3 %}
-    <a class="related-row" href="{{ p.url | relative_url }}" data-slug="{{ p.slug }}"><span lang="{{ p.lang | default: default_lang }}">{{ p.title }}</span><time datetime="{{ p.date | date_to_xmlschema }}">{{ p.date | date: "%d/%m/%Y" }}</time></a>
+    <a class="related-row" href="{{ p.url | relative_url }}" data-slug="{{ p.slug }}">
+      {%- for l in langs -%}
+        {%- assign tr = p.translations[l.code] -%}
+        {%- if forloop.first == false and tr -%}
+          <span data-lang-only="{{ l.code }}" lang="{{ l.code }}" hidden>{{ tr.title }}</span>
+        {%- else -%}
+          <span data-lang-only="{{ l.code }}" lang="{{ default_lang }}"{% unless forloop.first %} hidden{% endunless %}>{{ p.title }}</span>
+        {%- endif -%}
+      {%- endfor -%}
+      <time datetime="{{ p.date | date_to_xmlschema }}">{{ p.date | date: "%d/%m/%Y" }}</time></a>
     {%- endfor %}
   </nav>
 </article>

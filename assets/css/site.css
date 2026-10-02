@@ -40,6 +40,9 @@ button { cursor: pointer; }
 
 .no-js .js-only { display: none !important; }
 
+/* Post text in the languages not being shown. */
+[hidden] { display: none !important; }
+
 /* Turns every transition off for one frame (hash routes, resizes). */
 .instant, .instant * { transition: none !important; }
 

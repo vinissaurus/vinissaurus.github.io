@@ -1,6 +1,10 @@
 ---
 layout: null
 ---
+{%- comment -%}
+  One entry per post. The top-level fields are the default language; each
+  other language has its own entry under "translations" (null when missing).
+{%- endcomment -%}
 [
 {%- for post in site.posts %}
   {
@@ -11,7 +15,18 @@ layout: null
     "keys": {{ post.keywords | default: "" | jsonify }},
     "excerpt": {{ post.excerpt | strip_html | normalize_whitespace | jsonify }},
     "url": {{ post.url | relative_url | jsonify }},
-    "content": {{ post.content | strip_html | normalize_whitespace | jsonify }}
+    "content": {{ post.content | strip_html | normalize_whitespace | jsonify }},
+    "translations": {
+      {%- for l in site.data.i18n.languages offset: 1 %}
+      {%- assign tr = post.translations[l.code] %}
+      {{ l.code | jsonify }}: {% if tr %}{%- assign tr_html = tr.body | markdownify -%}{
+        "title": {{ tr.title | jsonify }},
+        "keys": {{ tr.keywords | default: "" | jsonify }},
+        "excerpt": {{ tr_html | split: "</p>" | first | strip_html | normalize_whitespace | jsonify }},
+        "content": {{ tr_html | strip_html | normalize_whitespace | jsonify }}
+      }{% else %}null{% endif %}{% unless forloop.last %},{% endunless %}
+      {%- endfor %}
+    }
   }{% unless forloop.last %},{% endunless %}
 {%- endfor %}
 ]

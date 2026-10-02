@@ -7,7 +7,7 @@ A blog that is one scene: a moai in a night field. Visitors ask it a question an
 | File | What it does |
 | --- | --- |
 | `_posts/*.md` | The posts, in Markdown. |
-| `_data/i18n.yml` | All interface text, in English and Brazilian Portuguese. |
+| `_data/i18n.yml` | All interface text and tag names, in English and Brazilian Portuguese. |
 | `_layouts/default.html` | The scene: image, thought balloon, speech balloon, Open Graph tags. |
 | `_layouts/post.html` | A post inside the speech balloon. Each post also gets a real page at `/posts/{slug}/` for sharing, search engines and visitors without JavaScript. |
 | `index.html` | The home page. Without JavaScript it shows the full archive. |
@@ -32,9 +32,18 @@ title: On standing still
 date: 2026-09-28
 tags: [time, patience]
 keywords: wait waiting slow patience stillness move rush hurry busy stop
+translations:
+  pt-BR:
+    title: Sobre ficar parado
+    keywords: esperar espera devagar paciência parado parar pressa apressado
+    body: |
+      The Portuguese text, in Markdown.
+
+      Leave a blank line between paragraphs, and indent every line
+      by six spaces, as here.
 ---
 
-Write the post here, in Markdown.
+Write the post here, in English, in Markdown.
 ```
 
 - **title**: shown as the heading. Its words also count the most when matching questions.
@@ -43,6 +52,7 @@ Write the post here, in Markdown.
 - **keywords**: extra words, separated by spaces, that should lead to this post even though they aren't in the title or tags. Think about how someone would ask: the words they'd type, not the words you wrote. Include the variants that a prefix match won't catch (`lonely` and `alone`, `glasses` and `eyes`).
 
   Don't name this field `keys`. In Jekyll's templates, `post.keys` is a built-in that lists a post's field names, so a `keys` field can never be read. That was the cause of an earlier bug where the site couldn't load its posts.
+- **translations**: optional. Under `pt-BR`, give the Portuguese `title`, `keywords` and `body`. The body is Markdown inside the front matter, so every line after `body: |` is indented by six spaces. A post without a translation shows its English text in the Portuguese interface.
 
 The voice: the moai speaks in the first person, plainly and calmly, in short sentences. It is not mystical and not cute.
 
@@ -50,12 +60,13 @@ If you link to an image from a post, use a path from the site root (`/assets/...
 
 ### How a question finds a post
 
-1. The question is lowercased and split into words. Words of two letters or fewer and common words (`why`, `does`, `anything`, …) are dropped. The list is `STOP` in `oracle.js`.
+1. The question is lowercased, accents are dropped (`solidão` → `solidao`), and it is split into words. Words of two letters or fewer and common words in either language (`why`, `does`, `anything`, `porque`, `coisa`, …) are dropped. The list is `STOP` in `oracle.js`.
 2. Each remaining word is cut to a root: words longer than five letters lose their last two letters (`waiting` → `waiti`).
 3. A post gains points when a word in one of its fields *starts with* that root, or when the question word starts with a field word longer than four letters (`remembering` finds `remember`, which the root `rememberi` would miss). Fields are weighted **title ×3, tags ×3, keywords ×2, body ×1**, and each field counts once per question word.
-4. The highest score wins. The next two posts that scored anything are listed as "also near your question". If nothing scored, the moai says it hasn't thought about that yet and shows the archive.
+4. Each post is scored once in English and once in Portuguese (its translated title, tag names, keywords and body), and keeps the better of the two. So a question in either language finds it, whatever language the interface is in.
+5. The highest score wins. The next two posts that scored anything are listed as "also near your question". If nothing scored, the moai says it hasn't thought about that yet and shows the archive.
 
-To check a new post, ask the questions you expect people to ask and see where they land. When the wrong post wins, adding a few `keywords` is usually enough.
+To check a new post, ask the questions you expect people to ask, in both languages, and see where they land. When the wrong post wins, adding a few `keywords` is usually enough. Portuguese verbs change their endings a lot, so list the forms people are likely to type (`dura duram durar`).
 
 ## Languages
 
@@ -71,7 +82,9 @@ In the templates and in `oracle.js`, translatable text is marked with `data-i18n
 
 To add a language, add it to `languages` (the order sets the toggle's order, and the first one is the default) and add a block under `strings` with its code.
 
-**Posts aren't translated yet.** Their titles, text and tags stay in English and are marked `lang="en"`, so screen readers still pronounce them correctly when the interface is in Portuguese. Questions are also matched only against the English text, so a question typed in Portuguese will usually get the "I haven't thought about that yet" answer until the posts carry translations.
+**Posts** carry their own translation in their front matter (see *Adding a post*). Each post page holds its text in every language, and the toggle shows the one that matches the interface. Without JavaScript, visitors see the English text.
+
+**Tag names** are translated once, for all posts, under `tags:` in `_data/i18n.yml`. Posts and links keep using the English tag (`/#/all/time`); only the name shown changes. When you use a new tag, add its Portuguese name there, or it will be shown in English.
 
 ## Publishing on GitHub Pages
 

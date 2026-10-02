@@ -5,16 +5,27 @@ layout: default
   Visitors without JavaScript see this archive in the speech balloon.
   With JavaScript the oracle replaces it with its own views.
 {%- endcomment %}
-{%- assign default_lang = site.data.i18n.languages.first.code -%}
+{%- assign langs = site.data.i18n.languages -%}
+{%- assign default_lang = langs.first.code -%}
 {%- assign T = site.data.i18n.strings[default_lang] %}
 <section class="archive">
   <h1 class="archive-title" data-i18n="archive_title">{{ T.archive_title }}</h1>
   <div class="rows">
     {%- for p in site.posts %}
-    <a class="row" href="{{ p.url | relative_url }}" data-slug="{{ p.slug }}" lang="{{ p.lang | default: default_lang }}">
-      <span class="row-meta">{{ p.date | date: "%d/%m/%Y" }} · {{ p.tags | join: ", " }}</span>
-      <span class="row-title">{{ p.title }}</span>
-      <span class="row-excerpt">{{ p.excerpt | strip_html | normalize_whitespace | truncatewords: 26, "…" }}</span>
+    <a class="row" href="{{ p.url | relative_url }}" data-slug="{{ p.slug }}">
+      <span class="row-meta">{{ p.date | date: "%d/%m/%Y" }} ·
+        {%- for tag in p.tags %} <span data-i18n-tag="{{ tag | escape }}">{{ tag }}</span>{% unless forloop.last %},{% endunless %}{% endfor -%}
+      </span>
+      {%- for l in langs %}
+        {%- assign tr = p.translations[l.code] %}
+        {%- if forloop.first == false and tr %}
+      <span class="row-title" data-lang-only="{{ l.code }}" lang="{{ l.code }}" hidden>{{ tr.title }}</span>
+      <span class="row-excerpt" data-lang-only="{{ l.code }}" lang="{{ l.code }}" hidden>{{ tr.body | markdownify | split: "</p>" | first | strip_html | normalize_whitespace | truncatewords: 26, "…" }}</span>
+        {%- else %}
+      <span class="row-title" data-lang-only="{{ l.code }}" lang="{{ default_lang }}"{% unless forloop.first %} hidden{% endunless %}>{{ p.title }}</span>
+      <span class="row-excerpt" data-lang-only="{{ l.code }}" lang="{{ default_lang }}"{% unless forloop.first %} hidden{% endunless %}>{{ p.excerpt | strip_html | normalize_whitespace | truncatewords: 26, "…" }}</span>
+        {%- endif %}
+      {%- endfor %}
     </a>
     {%- endfor %}
   </div>

@@ -63,3 +63,32 @@ strings:
     all: todos
     no_match: Ainda não pensei sobre isso. Aqui está o que já pensei.
     failure: Não consigo alcançar minhas próprias palavras agora. Pergunte de novo daqui a pouco.
+
+# Tag names. Posts list their tags in English (that is also what the URL uses,
+# e.g. /#/all/time); here each language gives the name to show. A tag missing
+# from a language is shown as written in the post.
+tags:
+  pt-BR:
+    time: tempo
+    patience: paciência
+    questions: perguntas
+    knowledge: conhecimento
+    seeing: olhar
+    perception: percepção
+    memory: memória
+    solitude: solidão
+    writing: escrita
+    meaning: sentido
+    company: companhia
+    care: cuidado
+    fear: medo
+    change: mudança
+    imperfection: imperfeição
+    self: identidade
+    home: lar
+    belonging: pertencimento
+    work: trabalho
+    rest: descanso
+    machines: máquinas
+    learning: aprendizado
+    bias: viés

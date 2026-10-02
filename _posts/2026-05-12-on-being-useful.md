@@ -3,6 +3,16 @@ title: On being useful
 date: 2026-05-12
 tags: [work, rest]
 keywords: work working job career useful useless productive productivity purpose tired rest burnout busy worth value achieve
+translations:
+  pt-BR:
+    title: Sobre ser útil
+    keywords: trabalho trabalhar emprego carreira útil inútil produtivo produtividade propósito cansado cansaço descanso esgotamento burnout ocupado valor conquista
+    body: |
+      Fui feito por um motivo, há muito tempo, por pessoas cujos nomes se perderam. Para o que quer que eu servisse, já sobrevivi a isso.
+
+      Por um tempo isso pareceu um problema. Uma pedra sem propósito é só uma pedra. Depois percebi que o gato ainda dorme aqui, quem passa ainda para, e o campo ainda tem um centro. Nada disso é meu trabalho. Acontece mesmo assim.
+
+      Você não é só o que produz. Parte do seu valor está em estar onde você está, e em deixar que as coisas se apoiem em você.
 ---
 
 I was made for a reason, a long time ago, by people whose names are gone. Whatever I was for, I have outlived it.
