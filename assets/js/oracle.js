@@ -18,6 +18,7 @@
   const body = document.body;
   const img = $('.moai');
   const thought = $('.thought');
+  const thoughtDots = [$('.thought-dot.d1'), $('.thought-dot.d2')];
   const pill = $('.thought-pill');
   const form = $('.thought-form');
   const input = $('#question');
@@ -37,7 +38,7 @@
   const THINK_MS = 1300;
   const FADE_MS = 650;                 // reduced motion: crossfade length
   const MX = 0.652, MY = 0.62;         // the moai's head, as fractions of the image
-  const TOP_CLEAR = 68;                // narrow screens: room for the language toggle
+  const TOP_CLEAR = 68;                // narrow screens: the question form stays below the language toggle
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -183,13 +184,38 @@
     if (!G.wide) ay = Math.max(ay, TOP_CLEAR + thought.offsetHeight);
     thought.style.right = G.vw - ax + 'px';
     thought.style.bottom = G.vh - ay + 'px';
+    placeDots(ax, ay);
+  }
+
+  // Wide screens keep the dots at the balloon's bottom-right corner (CSS).
+  // On narrow screens the balloon spans the width and the moai is centred,
+  // so the dots leave the bottom edge and head for the top of its head.
+  function placeDots(ax, ay) {
+    const [d1, d2] = thoughtDots;
+    if (G.wide) { d1.removeAttribute('style'); d2.removeAttribute('style'); return; }
+
+    const w = thought.offsetWidth, h = thought.offsetHeight;
+    const left = ax - w, top = ay - h;
+    const hat = at(G.in, MX, 0.44);
+    const sx = clamp(hat.x, left + 34, ax - 34);   // leave from the bottom edge, above the head
+    const sy = ay;
+    let dx = hat.x - sx, dy = hat.y - sy;
+    if (dy < 24) { dx = 0; dy = 40; }              // head tucked under the balloon: point down
+    const len = Math.hypot(dx, dy);
+    if (len > 64) { dx *= 64 / len; dy *= 64 / len; }
+
+    [[d1, 0.4, 14], [d2, 0.85, 8]].forEach(([d, f, size]) => {
+      d.style.right = 'auto';
+      d.style.bottom = 'auto';
+      d.style.left = sx + dx * f - left - size / 2 + 'px';
+      d.style.top = sy + dy * f - top - size / 2 + 'px';
+    });
   }
 
   function placeSpeech() {
     const { vw, vh, W, H, out } = G;
     const headX = out.x + 0.65 * W;
     const headY = out.y + 0.53 * H;
-    const capY = out.y + 0.44 * H;
     let bx, by, bw, bh, tx, ty;
 
     if (G.wide) {
@@ -197,8 +223,10 @@
       bw = Math.min(780, right - 24); bx = right - bw; by = 28; bh = vh - 56;
       tx = bw; ty = clamp(headY - by, 60, bh - 60);
     } else {
-      bx = 12; bw = vw - 24; by = TOP_CLEAR;
-      bh = Math.min(Math.max(320, capY - 34 - by), vh - by - 12);
+      // Narrow: reading comes first. The balloon takes 90% of the height and
+      // the tail points down at what is left of the moai below it.
+      bx = 12; bw = vw - 24; by = 12;
+      bh = Math.round(vh * 0.9) - by;
       tx = clamp(headX - bx, 40, bw - 40); ty = bh;
     }
 

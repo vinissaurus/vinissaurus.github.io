@@ -132,6 +132,11 @@ button { cursor: pointer; }
 @media (max-width: 899px) {
   .lang { top: 16px; right: 16px; }
 
+  /* On phones the toggle only appears while the question form is open,
+     leaving the top of the screen to the speech balloon. */
+  .js body.ready:not([data-state="asking"]) .lang { opacity: 0; visibility: hidden; transition: opacity 400ms ease, visibility 0s linear 400ms; }
+  .js body.ready[data-state="asking"] .lang { visibility: visible; }
+
   /* The form spans the width here and would sit on top of the title. */
   .js body.ready:is([data-state="asking"], [data-state="listening"]) .brand {
     opacity: 0; visibility: hidden; transition: opacity 400ms ease, visibility 0s linear 400ms;
@@ -407,7 +412,7 @@ button { cursor: pointer; }
 /* ---------- no JavaScript, narrow screens ---------- */
 
 @media (max-width: 899px) {
-  .no-js .speech { left: 12px; right: 12px; top: 12px; bottom: 50vh; width: auto; }
+  .no-js .speech { left: 12px; right: 12px; top: 12px; bottom: 10vh; width: auto; }
 }
 
 /* ---------- reduced motion: fades instead of zooms ---------- */
